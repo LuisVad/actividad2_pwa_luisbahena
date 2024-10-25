@@ -2,6 +2,45 @@ const STATIC_CACHE_NAME = 'static-cache-v1.1';
 const INMUTABLE_CACHE_NAME = 'inmutable-cache-v1.1';
 const DYNAMIC_CACHE_NAME = 'dynamic-cache-v1.1';
 
+const currentCache = 'cacheV0.0.3';
+
+const files = [
+  '/',
+  '/index.html',
+  '/css/style.css',
+  '/js/app.js',
+  '/images/usuario.png',
+  '/images/marias.jpg',
+  '/images/palmolive.jpg',
+  '/images/Corona.jpg',
+  '/products/products.html'
+];
+
+self.addEventListener('install', event => {
+  event.waitUntil(
+    caches.open(currentCache).then(cache => {
+      return Promise.all(
+        files.map(file => {
+          return cache.add(file).catch(error => {
+            console.error('Error caching files during install:', error);
+          });
+        })
+      );
+    }).catch(error => {
+      console.error('Error opening cache:', error);
+    })
+  );
+});
+
+self.addEventListener('activate', event => {
+  event.waitUntil(
+    caches.keys().then(cacheNames => Promise.all(
+      cacheNames.filter(cacheName => cacheName !== currentCache)
+      .map(cacheName => caches.delete(cacheName))
+    ))
+  );
+});
+
 self.addEventListener('install', function(event) {
   console.log('SW Registrado')
   
@@ -40,9 +79,28 @@ self.addEventListener('fetch', function(event) {
   console.log('used to intercept requests so we can check for the file or data in the cache')
 })
 
-self.addEventListener('activate', function(event) {
+// Interceptar las solicitudes y servir desde el caché
+self.addEventListener('fetch', event => {
+  event.respondWith(
+    caches.match(event.request).then(cachedResponse => {
+      // Devuelve el recurso en caché si está disponible
+      if (cachedResponse) {
+        return cachedResponse;
+      }
+      // Si no está en caché, intenta obtenerlo de la red
+      return fetch(event.request).catch(() => {
+        // Si la red falla y es la página inicial, devuelve index.html
+        if (event.request.mode === 'navigate') {
+          return caches.match('/index.html');
+        }
+      });
+    })
+  );
+});
+
+/*self.addEventListener('activate', function(event) {
   console.log('this event triggers when the service worker activates')
-})
+})*/
 
 const cleanCache = (cacheName, maxSize) =>{ //recibes un máximo de caches
   caches.open(cacheName)
