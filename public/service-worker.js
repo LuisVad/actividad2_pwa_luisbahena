@@ -5,113 +5,76 @@ const DYNAMIC_CACHE_NAME = 'dynamic-cache-v1.1';
 const currentCache = 'cacheV0.0.3';
 
 const files = [
+  'https://reqres.in/api/users',
+  'https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css',
+  'https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.min.js',
+  'https://unpkg.com/sweetalert/dist/sweetalert.min.js',
   '/',
-  '/index.html',
-  '/css/style.css',
-  '/js/app.js',
-  '/images/usuario.png',
-  '/images/marias.jpg',
-  '/images/palmolive.jpg',
-  '/images/Corona.jpg',
-  '/products/products.html'
+  'http://localhost:3000/index.html',
+  'http://localhost:3000/css/style.css',
+  'http://localhost:3000/js/app.js',
+  './images/usuario.png',
+  './images/marias.jpg',
+  './images/palmolive.jpg',
+  './images/Corona.jpg',
+  'http://localhost:3000/products/products.html'
 ];
 
-self.addEventListener('install', event => {
+self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches.open(currentCache).then(cache => {
-      return Promise.all(
-        files.map(file => {
-          return cache.add(file).catch(error => {
-            console.error('Error caching files during install:', error);
+    caches.open(INMUTABLE_CACHE_NAME).then((cache) => {
+      return cache.addAll(files);
+    })
+  );
+});
+
+self.addEventListener("fetch", function (event) {
+  // Excluir la ruta específica que no quieres cachear ni mostrar
+  if (event.request.url.includes('http://localhost:3000/persons/persons.html')) {
+    return;
+  }
+
+  event.respondWith(
+    caches.match(event.request).then((response) => {
+      return (
+        response ||
+        fetch(event.request).then((fetchResponse) => {
+          return caches.open(DYNAMIC_CACHE_NAME).then((cache) => {
+            cache.put(event.request, fetchResponse.clone());
+            cleanCache(DYNAMIC_CACHE_NAME, 50);
+            return fetchResponse;
           });
         })
       );
-    }).catch(error => {
-      console.error('Error opening cache:', error);
     })
   );
 });
 
-self.addEventListener('activate', event => {
+self.addEventListener("activate", function (event) {
   event.waitUntil(
-    caches.keys().then(cacheNames => Promise.all(
-      cacheNames.filter(cacheName => cacheName !== currentCache)
-      .map(cacheName => caches.delete(cacheName))
-    ))
+    caches
+      .keys()
+      .then((cacheNames) =>
+        Promise.all(
+          cacheNames
+            .filter(
+              (cacheName) =>
+                cacheName !== STATIC_CACHE_NAME &&
+                cacheName !== INMUTABLE_CACHE_NAME
+            )
+            .map((cacheName) => caches.delete(cacheName))
+        )
+      )
   );
 });
 
-self.addEventListener('install', function(event) {
-  console.log('SW Registrado')
-  
-//DATOS DE APPSHELL
-const respCache = caches.open(STATIC_CACHE_NAME).then((cache) => {
-  return cache.addAll([
-      '/',
-      '/index.html',
-      '/css/style.css',
-      '/js/app.js',
-    
-  ])
-})
-
-//event.waitUntil(respCache)
-
-//Rutas inmutables (que son CDN, o recursos que usamos)
-const respCacheInmutable = caches.open(INMUTABLE_CACHE_NAME)
-  .then((cache)=>{
-      return cache.addAll([
-              'https://reqres.in/api/users',
-              'https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css',
-              'https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.min.js',
-              'https://unpkg.com/sweetalert/dist/sweetalert.min.js'
-          ]);
-  });
-
-event.waitUntil(Promise.all[respCache, respCacheInmutable]); //espera a que se terminen de crear esos dos caches.
-
-
-//cache2.waitUntil(cache2)
-
-})
-
-self.addEventListener('fetch', function(event) {
-  console.log('used to intercept requests so we can check for the file or data in the cache')
-})
-
-// Interceptar las solicitudes y servir desde el caché
-self.addEventListener('fetch', event => {
-  event.respondWith(
-    caches.match(event.request).then(cachedResponse => {
-      // Devuelve el recurso en caché si está disponible
-      if (cachedResponse) {
-        return cachedResponse;
+// Función para limpiar el caché
+const cleanCache = (cacheName, maxSize) => {
+  caches.open(cacheName).then((cache) => {
+    cache.keys().then((items) => {
+      if (items.length >= maxSize) {
+        cache.delete(items[0]).then(() => cleanCache(cacheName, maxSize));
       }
-      // Si no está en caché, intenta obtenerlo de la red
-      return fetch(event.request).catch(() => {
-        // Si la red falla y es la página inicial, devuelve index.html
-        if (event.request.mode === 'navigate') {
-          return caches.match('/index.html');
-        }
-      });
-    })
-  );
-});
-
-/*self.addEventListener('activate', function(event) {
-  console.log('this event triggers when the service worker activates')
-})*/
-
-const cleanCache = (cacheName, maxSize) =>{ //recibes un máximo de caches
-  caches.open(cacheName)
-  .then((cache)=>{
-      return cache.keys().then((items)=>{
-          console.log(items.length);
-          if(items.length >= maxSize){ //comparar si se supera el tamaño de caches
-              cache.delete(items[0])//eliminar el primer cache
-              .then(()=>{cleanCache(cacheName, maxSize)}); //revisar si no hay más caches para eliminar.
-                  
-          }
-      })
-  })
-}
+    });
+  });
+};
