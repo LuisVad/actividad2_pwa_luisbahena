@@ -2,39 +2,33 @@
     "peliculas": [
         {
             "id": 1,
-            "nombre": "Batman P1",
-            "director": "Matt Reeves",
-            "clasificación": "Ciencia/Ficción"
+            "nombre": "Culiacán vs Mazatlán",
+            "director": "Óscar López",
+            "clasificacion": "Ciencia/Ficción"
         },
         {
             "id": 2,
-            "nombre": "Venow 2: Carnage Liberado",
-            "director": "Andy Serkis",
-            "clasificación": "Drama"
+            "nombre": "Narco vs Depredator",
+            "director": "Sergio Goyri",
+            "clasificacion": "Drama"
         },
         {
             "id": 3,
-            "nombre": "Spiderman: No Way Home",
-            "director": "Jon Watts",
-            "clasificación": "Superheroes"
+            "nombre": "Apocalipto",
+            "director": "Mel Gibson",
+            "clasificacion": "Suspenso"
         },
         {
             "id": 4,
-            "nombre": "Soto: El Retorno del Principe de Perú",
-            "director": "Mel Gibson",
-            "clasificación": "Suspenso"
+            "nombre": "Karate Kid",
+            "director": "Will Smith",
+            "clasificacion": "Acción"
         },
         {
             "id": 5,
-            "nombre": "Karate Kid",
-            "director": "Will Smith",
-            "clasificación": "Acción"
-        },
-        {
-            "id": 6,
             "nombre": "Tron, El Legado",
-            "director": "Ben Kingsley",
-            "clasificación": "Ciencia/Ficción"
+            "director": "Joseph Kosinski",
+            "clasificacion": "Ciencia/Ficción"
         }
     ]
 }
